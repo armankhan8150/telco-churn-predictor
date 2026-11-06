@@ -1,8 +1,8 @@
 # 📡 Telco Customer Churn Predictor
 
-> **Live App:** [Click]((https://telco-churn-predictor-123.streamlit.app/))
+> **Live App:** [Click](https://telco-churn-predictor-123.streamlit.app/)
 
-A complete end-to-end machine learning project — from raw data to a live deployed web app — built to help a telecom company predict which customers are about to leave so they can intervene before it's too late.
+A complete end-to-end machine learning project from raw data to a live deployed web app — built to help a telecom company predict which customers are about to leave so they can intervene before it's too late.
 
 ---
 
