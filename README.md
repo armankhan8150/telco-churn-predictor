@@ -1,66 +1,124 @@
-# Customer Churn Prediction Pipeline
+# 📡 Telco Customer Churn Predictor
 
-## Overview
-This project implements an **end-to-end Machine Learning pipeline** to predict customer churn using the Scikit-learn Pipeline API. The primary goal is to build a reusable, production-ready workflow that automates data preprocessing and model training while preventing data leakage.
+> **Live App:** [YOUR STREAMLIT APP LINK] ·
 
-## Dataset
-The project utilizes the **Telco Customer Churn Dataset**, which contains information about customers of a telecommunications company and whether they left the service (churned).
-- **Source:** [IBM Telco Customer Churn Dataset](https://raw.githubusercontent.com/IBM/telco-customer-churn-on-icp4d/master/data/Telco-Customer-Churn.csv)
-- **Target Variable:** `Churn` (Yes/No)
+A complete end-to-end machine learning project — from raw data to a live deployed web app — built to help a telecom company predict which customers are about to leave so they can intervene before it's too late.
 
-## Requirements
-To run this notebook, you need the following Python libraries installed:
-- `pandas`
-- `numpy`
-- `scikit-learn`
-- `joblib`
-- `matplotlib`
-- `seaborn`
+---
 
-## Pipeline Architecture
-The project leverages Scikit-learn's `Pipeline` and `ColumnTransformer` to handle different data types seamlessly:
+## 🎯 Business Problem
 
-1.  **Numerical Features:** (`tenure`, `MonthlyCharges`, `TotalCharges`) are scaled using `StandardScaler`.
-2.  **Categorical Features:** (e.g., `gender`, `InternetService`, `Contract`) are encoded using `OneHotEncoder`.
-3.  **Model Selection:** The pipeline tests and compares two primary classifiers:
-    - **Logistic Regression**
-    - **Random Forest Classifier**
+A telecom company is losing customers every month. This project answers two questions:
+
+1. **Why** do customers churn? (Exploratory Data Analysis)
+2. **Who** will churn next? (Machine Learning Prediction)
+
+---
+
+## 📊 Dataset
+
+**IBM Telco Customer Churn** — `telco_churn.csv`
+- 7,043 customers · 20 features · target: `Churn` (Yes / No)
+- Churn rate: **26.5%**
+- Source: IBM Sample Dataset (available on Kaggle)
+
+---
+
+## 🗂️ Project Structure
+
+```
+telco-churn/
+├── app.py                      # Streamlit web app
+├── requirements.txt            # Python dependencies
+├── telco_churn.csv             # Dataset
+├── Telco_Churn_Analysis.ipynb  # Full analysis notebook
+├── model/
+│   ├── churn_pipeline.pkl      # Trained sklearn Pipeline (preprocessor + Random Forest)
+│   ├── num_cols.pkl            # Numeric column names
+│   └── cat_cols.pkl            # Categorical column names
+└── README.md
+```
+
+---
+
+## 📓 Notebook Walkthrough (`Telco_Churn_Analysis.ipynb`)
+
+| Step | What it covers |
+|------|----------------|
+| 1 | Load data (`telco_churn.csv`) |
+| 2 | First look — dtypes, duplicates, missing values |
+| 3 | Data cleaning — fix `TotalCharges`, drop `customerID`, encode target |
+| 4 | Exploratory Data Analysis: churn by contract, tenure, charges, payment method |
+| 5 | Train/test split (80/20, stratified) |
+| 6 | Build sklearn Pipeline: `SimpleImputer → StandardScaler → OneHotEncoder` |
+| 7 | Compare three models: Logistic Regression, Decision Tree, Random Forest |
+| 8 | Improve Recall with `class_weight='balanced'` on all three models |
+| 9 | Tune best model with **GridSearchCV** (5-fold CV, optimised for Recall) |
+| 10 | Evaluate: confusion matrix, classification report, feature importance |
 
 
+---
 
-## Project Workflow
+## 🏆 Model Results
 
-### 1. Data Cleaning
-- Converts `TotalCharges` to a numeric format and handles missing values.
-- Maps the target variable `Churn` to binary values (1 for Yes, 0 for No).
+| Model | Accuracy | Recall (Churn) | ROC-AUC |
+|-------|----------|----------------|---------|
+| Logistic Regression (balanced) | ~0.74 | ~0.76 | ~0.83 |
+| Decision Tree (balanced) | ~0.72 | ~0.73 | ~0.75 |
+| **Random Forest (balanced + GridSearchCV)** | ~0.78 | **~0.78** | **~0.84** |
 
-### 2. Feature Engineering & Selection
-- Separates the dataset into features ($X$) and the target ($y$).
-- Splits the data into training (80%) and testing (20%) sets with stratification to maintain class balance.
+> **Why Recall?** Missing a churner costs more than falsely flagging a loyal customer.
+> A missed churner = lost revenue. A false positive = a small retention offer.
 
-### 3. Hyperparameter Tuning
-Uses `GridSearchCV` to find the optimal parameters for the models:
-- **Logistic Regression:** Tunes the regularization strength (`C`).
-- **Random Forest:** Tunes `n_estimators`, `max_depth`, and `min_samples_split`.
+> **Why `class_weight='balanced'`?** Only 26.5% of customers churn. Without balancing,
+> models optimise for the majority class and miss many churners.
+> `class_weight='balanced'` automatically penalises missing a churner more heavily.
 
-### 4. Evaluation
-Models are evaluated using several metrics:
-- **Accuracy Score**
-- **Classification Report** (Precision, Recall, F1-Score)
-- **Confusion Matrix** (to visualize True/False Positives and Negatives)
-- **ROC Curve & AUC Score**
-  
-#### Model Performance Visuals
-![Confusion Matrix and ROC Curve](assets/model_performance.png)
+---
 
-### 5. Model Deployment Readiness
-The entire pipeline—including the preprocessor and the trained model—is saved as a single `churn_model_pipeline.pkl` file using `joblib`. This allows for easy deployment in a production environment without needing to re-run preprocessing steps manually on new data.
+## 🔑 Key Findings (EDA)
 
-## Key Insights
-Based on the Random Forest model, the top drivers for churn are:
-![Feature Importance Plot](assets/feature_importance.png)
+- **Month-to-month customers churn at ~42%** vs ~3% for 2-year contracts
+- **Short tenure = high churn** — most churners leave in the first 12 months
+- **High monthly charges** correlate strongly with churn
+- **Electronic check users** churn at ~45% — highest of any payment method
+- **No OnlineSecurity + Fiber optic** is a high-risk combination
 
-## Key Takeaways
-- **Clean Workflow:** Pipelines ensure that training and transformation steps are bundled together.
-- **No Data Leakage:** Preprocessing parameters are learned only from the training data.
-- **Production-Grade:** The saved object is ready to be loaded by a web API or backend service for real-time predictions.
+---
+
+## 💡 Business Recommendations
+
+1. **Incentivise annual contracts** — offer a discount in the first 3 months (biggest lever)
+2. **Early intervention** — trigger retention outreach at months 3, 6, and 9
+3. **Loyalty pricing reviews** — proactively offer better plans to high-charge customers
+4. **Promote auto-pay** — $3–5/month discount to switch from electronic check
+5. **Bundle OnlineSecurity/TechSupport** into Fiber plans as default
+
+---
+
+## 🌐 Streamlit App Features
+
+- Enter any customer's account details across demographics, services, and billing
+- Get a **High / Medium / Low** churn risk label with probability score
+- See personalised retention recommendations based on that customer's risk factors
+
+---
+
+## 🚀 Run Locally
+
+```bash
+git clone https://github.com/armankhan8150/telco-churn-predictor.git
+cd telco-churn-predictor
+pip install -r requirements.txt
+streamlit run app.py
+```
+
+---
+
+## 🛠️ Tech Stack
+
+`Python` · `pandas` · `scikit-learn` · `Streamlit` · `matplotlib` · `seaborn` · `joblib`
+
+---
+
+*Dataset: IBM Telco Customer Churn. Built as a portfolio project for PSEB AI Bootcamp.*
